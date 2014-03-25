@@ -19,9 +19,9 @@ func main() {
 func run() error {
 	qml.Init(nil)
 	engine := qml.NewEngine()
-	container := &ModelContainer{models: make([]*Colors, 0)}
+	container := &ModelContainer{models: make([]*Colors, 0), CurrentModel: &Colors{}}
 	container.models = append(container.models, &Colors{})
-	container.CurrentModel = container.models[0]
+	container.CurrentModel.CopyFrom(container.models[0])
 	engine.Context().SetVar("container", container)
 	component, err := engine.LoadFile("delegate.qml")
 	if err != nil {
@@ -38,14 +38,21 @@ func run() error {
 	}()
 
 	go func() {
-		//replace with newly created model after 3 seconds
-		time.Sleep(3 * time.Second)
+		//replace with newly created model after 5 seconds
+		time.Sleep(5 * time.Second)
+		//create second model
 		container.models = append(container.models, &Colors{})
-		container.CurrentModel = container.models[1]
+		//backup first model
+		container.models[0].CopyFrom(container.CurrentModel)
+		//swap models
+		container.CurrentModel.CopyFrom(container.models[1])
 
 		//switch back to old model 3 seconds later
 		time.Sleep(3 * time.Second)
-		container.CurrentModel = container.models[0]
+		//backup second model
+		container.models[1].CopyFrom(container.CurrentModel)
+		//swap models
+		container.CurrentModel.CopyFrom(container.models[0])
 	}()
 
 	window.Wait()
@@ -70,4 +77,10 @@ func (colors *Colors) Color(index int) color.RGBA {
 type ModelContainer struct {
 	CurrentModel *Colors
 	models       []*Colors
+}
+
+func (dst *Colors) CopyFrom(src *Colors) {
+	dst.list = src.list
+	dst.Len = src.Len
+	qml.Changed(dst, &dst.Len)
 }
