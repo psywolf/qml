@@ -19,8 +19,10 @@ func main() {
 func run() error {
 	qml.Init(nil)
 	engine := qml.NewEngine()
-	colors := &Colors{}
-	engine.Context().SetVar("colors", colors)
+	container := &ModelContainer{models: make([]*Colors, 0)}
+	container.models = append(container.models, &Colors{})
+	container.CurrentModel = container.models[0]
+	engine.Context().SetVar("container", container)
 	component, err := engine.LoadFile("delegate.qml")
 	if err != nil {
 		return err
@@ -30,10 +32,22 @@ func run() error {
 	go func() {
 		n := func() uint8 { return uint8(rand.Intn(256)) }
 		for i := 0; i < 100; i++ {
-			colors.Add(color.RGBA{n(), n(), n(), 0xff})
+			container.CurrentModel.Add(color.RGBA{n(), n(), n(), 0xff})
 			time.Sleep(1 * time.Second)
 		}
 	}()
+
+	go func() {
+		//replace with newly created model after 3 seconds
+		time.Sleep(3 * time.Second)
+		container.models = append(container.models, &Colors{})
+		container.CurrentModel = container.models[1]
+
+		//switch back to old model 3 seconds later
+		time.Sleep(3 * time.Second)
+		container.CurrentModel = container.models[0]
+	}()
+
 	window.Wait()
 	return nil
 }
@@ -51,4 +65,9 @@ func (colors *Colors) Add(c color.RGBA) {
 
 func (colors *Colors) Color(index int) color.RGBA {
 	return colors.list[index]
+}
+
+type ModelContainer struct {
+	CurrentModel *Colors
+	models       []*Colors
 }

@@ -5,10 +5,10 @@ Item {
 
     ListView {
         width: 120;
-        model: colors.len
+        model: container.currentModel.len
         delegate: Text {
             text: "I am color number: " + index
-            color: colors.color(index)
+            color: container.currentModel.color(index)
         }
         anchors.top: parent.top
         anchors.bottom: parent.bottom
