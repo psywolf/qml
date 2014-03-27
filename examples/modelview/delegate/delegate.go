@@ -20,6 +20,8 @@ func run() error {
 	qml.Init(nil)
 	engine := qml.NewEngine()
 	colors := &Colors{}
+	foo := 0
+	colors.Len = &foo
 	engine.Context().SetVar("colors", colors)
 	component, err := engine.LoadFile("delegate.qml")
 	if err != nil {
@@ -40,12 +42,12 @@ func run() error {
 
 type Colors struct {
 	list []color.RGBA
-	Len  int
+	Len  *int
 }
 
 func (colors *Colors) Add(c color.RGBA) {
 	colors.list = append(colors.list, c)
-	colors.Len = len(colors.list)
+	*colors.Len = len(colors.list)
 	qml.Changed(colors, &colors.Len)
 }
 
