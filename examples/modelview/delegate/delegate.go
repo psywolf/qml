@@ -42,10 +42,12 @@ func run() error {
 		time.Sleep(3 * time.Second)
 		container.models = append(container.models, &Colors{})
 		container.CurrentModel = container.models[1]
+		qml.Changed(container, &container.CurrentModel)
 
 		//switch back to old model 3 seconds later
 		time.Sleep(3 * time.Second)
 		container.CurrentModel = container.models[0]
+		qml.Changed(container, &container.CurrentModel)
 	}()
 
 	window.Wait()
